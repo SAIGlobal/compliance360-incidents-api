@@ -1,0 +1,539 @@
+openapi: 3.0.0
+servers:
+  - description: Production Compliance 360
+    url: https://secure.compliance360.com
+info:
+  description: |
+    # Overview
+    The Compliance 360 Incidents API provides the ability to create, update and remove incidents in the Compliance 360 application. This documentation covers the endpoints that are required to accomplish these activities. The full listing of Module, Components and Operations can be retrieved by using the Compliance 360 metadata API. All data related activities (create, udpate, find, delete) are accomplished using the Compliance 360 data API.
+    
+    ## Incidents
+    Incidents or cases often originate from external sources. The Incidents API provides the ability to create new incidents / cases using data collected from external systems.
+    This APIs listed in this below will allow you find, create, update and delete user accounts. For example, to create a new Incident you may need to perform the following actions:
+    
+    1. Find a division where the incident should be created.
+    1. Find a folder where the incident should be created.
+    1. Find the default Incident workflow template.
+    1. Create the Incident.
+    1. Create an Incident Status Update.
+    1. Associate the Incident Status Update with the Incident.
+    
+    ## Built using core API endpoints
+    This api is built using the endpoints described in the following APIs:
+    * [Compliance 360 Security API](https://github.com/SAIGlobal/compliance360-security-api#compliance-360-security-api)
+    * [Compliance 360 Metadata API](https://github.com/SAIGlobal/compliance360-metadata-api#compliance-360-metadata-api)
+    * [Compliance 360 Data API](https://github.com/SAIGlobal/compliance360-data-api#compliance-360-data-api)
+    
+    # API Syntax Reference
+    The Compliance 360 APIs support a robust query and filtering syntax that can be used with GET endpoints 
+    that are designed to return information. Please see the [Compliance 360 API Syntax Reference](https://github.com/SAIGlobal/compliance360-data-api/blob/master/SYNTAX_REFERENCE.md#compliance-360-api-syntax-reference) for more information on how to filter, sort and select fields during query operations.
+    
+  version: "2.0.0"
+  title: Compliance 360 Incidents API
+  contact:
+    email: support@saiglobal.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+  
+paths:
+  /API/2.0/Data/Global/WorkflowTemplates/MetaIncident:
+  /API/2.0/Data/Incidents/MetaIncident/Default:
+    get:
+    post:
+  /API/2.0/Data/Incidents/MetaIncident/Default/{id}:
+    post:
+  /API/2.0/Data/Incidents/MetaIncident/Default/{id}/Delete:
+    post:
+
+  /API/2.0/Data/Incidents/MetaIncidentAction/Default:
+    get:
+    post:
+  /API/2.0/Data/Incidents/MetaIncidentAction/Default/{id}:
+    post:
+  /API/2.0/Data/Incidents/MetaIncidentAction/Default/{id}/Delete:
+    post:
+
+  /API/2.0/Data/Incidents/MetaIncidentAmount/Default:
+    get:
+    post:
+  /API/2.0/Data/Incidents/MetaIncidentAmount/Default/{id}:
+    post:
+  /API/2.0/Data/Incidents/MetaIncidentAmount/Default/{id}/Delete:
+    post:
+
+  /API/2.0/Data/Incidents/MetaIncidentContact/Default:
+    get:
+    post:
+  /API/2.0/Data/Incidents/MetaIncidentContact/Default/{id}:
+    post:
+  /API/2.0/Data/Incidents/MetaIncidentContact/Default/{id}/Delete:
+    post:
+
+  /API/2.0/Data/Incidents/MetaIncidentStatus/Default:
+    get:
+    post:
+  /API/2.0/Data/Incidents/MetaIncidentStatus/Default/{id}:
+    post:
+  /API/2.0/Data/Incidents/MetaIncidentStatus/Default/{id}/Delete:
+    post:
+
+  /API/2.0/Data/Incidents/MetaInvestigation/Default:
+    get:
+    post:
+  /API/2.0/Data/Incidents/MetaInvestigation/Default/{id}:
+    post:
+  /API/2.0/Data/Incidents/MetaInvestigation/Default/{id}/Delete:
+    post:
+
+  /API/2.0/Data/Incidents/MetaInvestigationIssue/Default:
+    get:
+    post:
+  /API/2.0/Data/Incidents/MetaInvestigationIssue/Default/{id}:
+    post:
+  /API/2.0/Data/Incidents/MetaInvestigationIssue/Default/{id}/Delete:
+    post:
+
+  /API/2.0/Data/Incidents/MetaInvestigationInterview/Default:
+    get:
+    post:
+  /API/2.0/Data/Incidents/MetaInvestigationInterview/Default/{id}:
+    post:
+  /API/2.0/Data/Incidents/MetaInvestigationInterview/Default/{id}/Delete:
+    post:
+
+components:
+  schemas:
+    Incident:
+      type:
+        object
+      properties:
+        Actions:
+          type: array
+          dscription: Array of Action Ids
+          items:
+            $ref: '#/components/schemas/EntityId'
+        Allegation:
+          type: string
+        Amounts:
+          type: array
+          description: Array of Amount Ids
+          items:
+            $ref: '#/components/schemas/EntityId'
+        Attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityId'
+        BusinessArea:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        CaseStatus:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Categories:
+          type: array
+          description: Array of CategoryIds
+          items:
+            $ref: '#/components/schemas/EntityId'
+        CloseComments:
+          type: string
+        CloseReason:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        CloseStatus:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Comments:
+          type: string
+        Company:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+        DateFinished:
+          type: string
+          format: date-time
+        DateReceived:
+          type: string
+          format: date-time
+        DateStarted:
+          type: string
+          format: date-time
+        Description:
+          type: string
+        #EvidenceDocuments
+        ExpEndDate:
+          type: string
+          format: date-time
+        ImportDate:
+          type: string
+          format: date-time
+        ImportId:
+          type: string
+        ImportSource:
+          type: string
+        IncidentDate:
+          type: string
+          format: date-time
+        IncidentSummary:
+          type: string
+        #InterestedParty
+        Investigations:
+          type: array
+          description: Array of ids of the Investigations that belong to this Incident.
+          items:
+            $ref: '#/components/schemas/EntityId'
+        #Location
+        Name:
+          type: string
+        Notes:
+          type: string
+        Number:
+          type: string
+        Product:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        RelatedIncidents:
+          type: array
+          description: Array of ids of the related Incidents.
+          items:
+            $ref: '#/components/schemas/EntityId'
+        RelatedPolicies:
+          type: array
+          description: Array of ids of the related Policies.
+          items:
+            $ref: '#/components/schemas/EntityId'
+        Related Types:
+          type: array
+          description: Array of ids of the related Types / Subtypes.
+          items:
+            $ref: '#/components/schemas/EntityId'
+        ResolutionSummary:
+          type: string
+        RespParty:
+          type: object
+          description: Reference to an Employee.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Source:
+          type: string
+        #Source System
+        Statuses:
+          type: array
+          description: Array of ids of the the related Statuses.
+          items:
+            $ref: '#/components/schemas/EntityId'
+        TimeReceived:
+          type: string
+          format: date-time
+        Type:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+    Action:
+      type: object
+      properties:
+        Attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityId'
+        BusinessArea:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Comments:
+          type: string
+        Company:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        DateCreated:
+          type: string
+          format: date-time
+        Description:
+          type: string
+        Employee:
+          type: object
+          description: Reference to an Employee.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Product:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Type:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+    Amount:
+      type: object
+      properties:
+        Amount:
+          type: number
+        Attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityId'
+        BusinessArea:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Comments:
+          type: string
+        Company:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        DateFrom:
+          type: string
+          format: date-time
+        DateTo:
+          type: string
+          format: date-time
+        Description:
+          type: string
+        Employee:
+          type: object
+          description: Reference to an Employee.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Product:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Type:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+    Attachment:
+      type: object
+      properties:
+        id: 
+          type: string
+          description: The id of the attachment.
+        Name: 
+          type: string
+          description: The name of the attachment.
+        AttachedTo:
+          type: object
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        FileContent:
+          type: string
+          description: The path to the file content field. This value can be passed to the Data service to download or upload file content.
+    Contact:
+      type: object
+      properties:
+        Address1: 
+          type: string
+        Address2: 
+          type: string
+        Attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityId'
+        City: 
+          type: string
+        Comments: 
+          type: string
+        Company:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Email: 
+          type: string
+        Fax: 
+          type: string
+        FirstName: 
+          type: string
+        LastName: 
+          type: string
+        Notes: 
+          type: string
+        Phone: 
+          type: string
+        State: 
+          type: string
+        Zip: 
+          type: string
+    Interview:
+      type: object
+      properties:
+        CreatedBy:
+          type: object
+          description: Reference to an Employee.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        InterviewDate:
+          type: string
+          format: date-time
+        InterviewTopic:
+          type: string
+        Interviewed:
+          type: boolean
+        Interviewer:
+          type: object
+          description: Reference to an Employee.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Notes:
+          type: string
+    Investigation:
+      type: object
+      properties:
+        Interviews:
+          type: array
+          description: Reference to Interviews.
+          items:
+            $ref: '#/components/schemas/EntityId'
+        Issues:
+          type: array
+          description: Reference to Issues.
+          items:
+            $ref: '#/components/schemas/EntityId'
+        Narrative:
+          type: string
+        RespParty:
+          type: object
+          description: Reference to an Employee.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        SecondaryInvestigators:
+          type: array
+          description: Reference to Employees.
+          items:
+            $ref: '#/components/schemas/EntityId'
+    Issue:
+      type: object
+      properties:
+        IssueSubTopic:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        IssueTopic:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Outcome:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+    RelatedType:
+      type: object
+      properties:
+        SubType:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Type:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+    Status:
+      type: object
+      properties:
+        Attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityId'
+        CaseStatus:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Comments:
+          type: string
+        ConfidentialityCode:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        DateCreated:
+          type: string
+          format: date-time
+        Description:
+          type: string
+        DisplayToClient:
+          type: boolean
+        Employee:
+          type: object
+          description: Reference to an Employee.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Mode:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        Note:
+          type: string
+        Reason:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        ResolutionCode:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        SecondaryCategory:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        SecondaryStatusCode:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        SentToHotlineVendor:
+          type: boolean
+        Significance:
+          type: object
+          description: Reference to lookup table value.
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        SourceSystem:
+          type: string
+    EntityId:
+      type: object
+      required:
+        - id
+      properties:
+        id: 
+          type: string
+        action: 
+          type: string
+          description: Action value used when creating or updating a referenced value which tells the application to add or remove the relationship to the referenced component.
+          enum: [ADD, REMOVE]
+          
