@@ -12,7 +12,7 @@ The Compliance 360 application is the leading Governance Risk and Compliance (GR
 The Employee API provides developers with the ability to...
 
 # API Documentation
-Our APIs are documented in the [OpenAPI Specification](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md) format. Read the documentation [here](https://app.swaggerhub.com/api/saiglobal/compliance360-employee/2.0.0).
+Our APIs are documented in the [OpenAPI Specification](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md) format. [Read the documentation](https://app.swaggerhub.com/api/saiglobal/compliance360-incidents/2.0.0).
 
 # Implementations
 Below are implementations of the Security API in languages we use. Don't see your favorite language? Contribute back to the community by sharing your implementation.
