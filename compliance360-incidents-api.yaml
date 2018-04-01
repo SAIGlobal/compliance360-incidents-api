@@ -18,6 +18,44 @@ info:
     1. Create an Incident Status Update.
     1. Associate the Incident Status Update with the Incident.
     
+    ## Creating and relating Parent / Child objects
+    It is important to know that objects in the Compliance 360 application are organized in a hierarchy. However, the hierarchy is established through 
+    relationships only after the objects are created. For example, lets suppose that you wish to create an Incident and an Investigation record. The first
+    step will be create the Incident and retrieve its new Id. The second step will be to create the Investigation, which will initially not have any relation to
+    the new Incident. Once you save the Investigation and retrieve its Id, you will be able to add it to the "Investigations" field of the Incident,
+    save the Incident again, therefore associating the two records. If you do not followup and associate the Investigation to the Incident, then
+    the Investigation will be orphaned in the system, and security and workflow of the parent Incident will not know about the new Investigation.
+
+    ```
+    // step 1 - create incident
+    POST /API/2.0/Data/Incidents/MetaIncident/Default
+    {
+      Name: "My new Incident"
+    }
+    //
+    // ...assume POST successful and Incident Id is "1234"
+    //
+    // step 2 - create the investigation
+    POST /API/2.0/Data/Incidents/MetaInvestigation/Default
+    {
+      Narrative: "This is a new investigation for My new Incident"
+    }
+    //
+    // ...assume POST successful and Investigation Id is "5678"
+    //
+    // step 3 - update the incident and associate the Investigation with the Incident
+    POST /API/2,0/Data/Incidents/MetaIncident/Default/1234
+    {
+      Name: "My new Incident",
+      Investigations: [
+        { 
+          id: "5678",
+          Action: "ADD"
+        }
+      ]
+    }
+    ``` 
+
     ## Built using core API endpoints
     This api is built using the endpoints described in the following APIs:
     * [Compliance 360 Security API](https://github.com/SAIGlobal/compliance360-security-api#compliance-360-security-api)
@@ -38,79 +76,1595 @@ info:
   
 paths:
   /API/2.0/Data/Global/WorkflowTemplates/MetaIncident:
+    get:
+      tags:
+        - Workflow
+      summary: Finds WorkflowTemplates for Incidents
+      operationId: getDefaultWorkflowTemplate
+      parameters:
+        - in: query
+          name: skip
+          description: The number of records to skip before returning results.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: take
+          description: The number of records to return.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: select
+          description: Comma separated list of fields to return in the result set.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: where
+          description: The filter criteria used to return the default workflow template. Use IsDefault='True' to return the default workflow template for an object type.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: sort
+          description: Collection of sort expressions.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  data:
+                    - id: 'Global/WorkflowTemplates/MetaIncident:806'
+
   /API/2.0/Data/Incidents/MetaIncident/Default:
     get:
+      tags:
+        - Incidents
+      summary: Finds Incidents.
+      operationId: getIncident
+      parameters:
+        - in: query
+          name: take
+          description: The number of records to return.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: skip
+          description: The number of records to skip before returning results.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: sort
+          description: A collection of sort expressions.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: where
+          description: A collection of filter criteria.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                        example: 200
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                        example: OK
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Incident'
     post:
+      tags:
+        - Incidents
+      summary: Creates a new Incident.
+      operationId: createIncident
+      parameters:
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Incident'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaIncident/Default:207'
+
   /API/2.0/Data/Incidents/MetaIncident/Default/{id}:
     post:
+      tags:
+        - Incidents
+      summary: Updates an existing Incident.
+      operationId: createIncident
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to update.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Incident'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaIncident/Default:207'
+
   /API/2.0/Data/Incidents/MetaIncident/Default/{id}/Delete:
     post:
+      tags:
+        - Incidents
+      summary: Deletes an existing Incident.
+      operationId: deleteIncident
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to delete.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
 
   /API/2.0/Data/Incidents/MetaIncidentAction/Default:
     get:
-    post:
+      tags:
+        - Actions
+      summary: Finds Incident Actions.
+      operationId: getIncidentAction
+      parameters:
+        - in: query
+          name: take
+          description: The number of records to return.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: skip
+          description: The number of records to skip before returning results.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: sort
+          description: A collection of sort expressions.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: where
+          description: A collection of filter criteria.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                        example: 200
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                        example: OK
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Action'
+    post: 
+      tags:
+        - Actions
+      summary: Creates a new Incident Action.
+      operationId: createIncidentAction
+      parameters:
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident action information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Action'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaIncidentAction/Default:207'
+
   /API/2.0/Data/Incidents/MetaIncidentAction/Default/{id}:
     post:
+      tags:
+        - Actions
+      summary: Updates an existing Incident Action.
+      operationId: updateIncidentAction
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to update.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Action'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaIncidentAction/Default:207'
+                  
   /API/2.0/Data/Incidents/MetaIncidentAction/Default/{id}/Delete:
     post:
+      tags:
+        - Actions
+      summary: Deletes an existing Incident Action.
+      operationId: deleteIncidentAction
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to delete.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
 
   /API/2.0/Data/Incidents/MetaIncidentAmount/Default:
     get:
+      tags:
+        - Amounts
+      summary: Finds Incident Amounts.
+      operationId: getIncidentAmount
+      parameters:
+        - in: query
+          name: take
+          description: The number of records to return.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: skip
+          description: The number of records to skip before returning results.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: sort
+          description: A collection of sort expressions.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: where
+          description: A collection of filter criteria.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                        example: 200
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                        example: OK
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Amount'
     post:
+      tags:
+        - Amounts
+      summary: Creates a new Incident Amount.
+      operationId: createIncidentAmount
+      parameters:
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident amount information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Amount'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaIncidentAmount/Default:207'
+
   /API/2.0/Data/Incidents/MetaIncidentAmount/Default/{id}:
     post:
+      tags:
+        - Amounts
+      summary: Updates an existing Incident Amount.
+      operationId: updateIncidentAmount
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to update.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident amount information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Amount'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaIncidentAmount/Default:207'
+
   /API/2.0/Data/Incidents/MetaIncidentAmount/Default/{id}/Delete:
     post:
+      tags:
+        - Amounts
+      summary: Deletes an existing Incident Amount.
+      operationId: deleteIncidentAmount
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to delete.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
 
   /API/2.0/Data/Incidents/MetaIncidentContact/Default:
     get:
+      tags:
+        - Contacts
+      summary: Finds Incident Contacts.
+      operationId: getIncidentContact
+      parameters:
+        - in: query
+          name: take
+          description: The number of records to return.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: skip
+          description: The number of records to skip before returning results.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: sort
+          description: A collection of sort expressions.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: where
+          description: A collection of filter criteria.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                        example: 200
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                        example: OK
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contact'
     post:
+      tags:
+        - Contacts
+      summary: Creates a new Incident Contact.
+      operationId: createIncidentContact
+      parameters:
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident contact information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contact'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaIncidentContact/Default:207'
+
   /API/2.0/Data/Incidents/MetaIncidentContact/Default/{id}:
     post:
+      tags:
+        - Contacts
+      summary: Updates an existing Incident Contact.
+      operationId: updateIncidentContact
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to update.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident contact information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contact'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaIncidentContact/Default:207'
+
   /API/2.0/Data/Incidents/MetaIncidentContact/Default/{id}/Delete:
     post:
+      tags:
+        - Contacts
+      summary: Deletes an existing Incident Contact.
+      operationId: deleteIncidentContact
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to delete.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
 
   /API/2.0/Data/Incidents/MetaIncidentStatus/Default:
     get:
+      tags:
+        - Statuses
+      summary: Finds Incident Statuses.
+      operationId: getIncidentStatus
+      parameters:
+        - in: query
+          name: take
+          description: The number of records to return.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: skip
+          description: The number of records to skip before returning results.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: sort
+          description: A collection of sort expressions.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: where
+          description: A collection of filter criteria.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                        example: 200
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                        example: OK
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Status'
     post:
+      tags:
+        - Statuses
+      summary: Creates a new Incident Status.
+      operationId: createIncidentStatus
+      parameters:
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Status'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaIncidentStatus/Default:207'
+
   /API/2.0/Data/Incidents/MetaIncidentStatus/Default/{id}:
     post:
+      tags:
+        - Statuses
+      summary: Updates an existing Incident Status.
+      operationId: updateIncidentStatus
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to update.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Status'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaIncidentStatus/Default:207'
+
   /API/2.0/Data/Incidents/MetaIncidentStatus/Default/{id}/Delete:
     post:
+      tags:
+        - Statuses
+      summary: Deletes an existing Incident Status.
+      operationId: createIncidentStatus
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to delete.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
 
   /API/2.0/Data/Incidents/MetaInvestigation/Default:
     get:
+      tags:
+        - Investigations
+      summary: Finds Incidents Investigations.
+      operationId: getIncidentInvestigation
+      parameters:
+        - in: query
+          name: take
+          description: The number of records to return.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: skip
+          description: The number of records to skip before returning results.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: sort
+          description: A collection of sort expressions.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: where
+          description: A collection of filter criteria.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                        example: 200
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                        example: OK
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Investigation'
     post:
+      tags:
+        - Investigations
+      summary: Creates a new Incident Investigation.
+      operationId: createIncidentInvestigation
+      parameters:
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident investigation information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Investigation'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaInvestigation/Default:207'
+
   /API/2.0/Data/Incidents/MetaInvestigation/Default/{id}:
     post:
+      tags:
+        - Investigations
+      summary: Updates an existing Incident Investigation.
+      operationId: updateIncidentInvestigation
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to update.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident investigation information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Investigation'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaInvestigation/Default:207'
+
   /API/2.0/Data/Incidents/MetaInvestigation/Default/{id}/Delete:
     post:
+      tags:
+        - Investigations
+      summary: Deletes an existing Incident Investigation.
+      operationId: deleteIncidentInvestigation
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to delete.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
 
   /API/2.0/Data/Incidents/MetaInvestigationIssue/Default:
     get:
+      tags:
+        - Issues
+      summary: Finds Incident Investigation Issues
+      operationId: getIncidentInvestigationIssue
+      parameters:
+        - in: query
+          name: take
+          description: The number of records to return.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: skip
+          description: The number of records to skip before returning results.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: sort
+          description: A collection of sort expressions.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: where
+          description: A collection of filter criteria.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                        example: 200
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                        example: OK
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Issue'
+
     post:
+      tags:
+        - Issues
+      summary: Creates a new Incident Investigation Issue.
+      operationId: createIncidentInvestigationIssue
+      parameters:
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident investigation issue information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Issue'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaInvestigationIssue/Default:207'
+
   /API/2.0/Data/Incidents/MetaInvestigationIssue/Default/{id}:
     post:
+      tags:
+        - Issues
+      summary: Updates an existing Incident Investigation Issue.
+      operationId: updateIncidentInvestigationIssue
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to update.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident investigation issue information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Issue'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaInvestigationIssue/Default:207'
+
   /API/2.0/Data/Incidents/MetaInvestigationIssue/Default/{id}/Delete:
     post:
-
+      tags:
+        - Issues
+      summary: Deletes an existing Incident Investigation Issue.
+      operationId: updateIncidentInvestigationIssue
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to delete.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          
   /API/2.0/Data/Incidents/MetaInvestigationInterview/Default:
     get:
+      tags:
+        - Interviews
+      summary: Finds Incident Investigation Interviews
+      operationId: getIncidentInvestigationInterview
+      parameters:
+        - in: query
+          name: take
+          description: The number of records to return.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: skip
+          description: The number of records to skip before returning results.
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: sort
+          description: A collection of sort expressions.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: where
+          description: A collection of filter criteria.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                        example: 200
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                        example: OK
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Interview'
     post:
+      tags:
+        - Interviews
+      summary: Creates a new Incident Investigation Interview.
+      operationId: createIncidentInvestigationInterview
+      parameters:
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident investigation interview information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Interview'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaInvestigationInterview/Default:207'
+
   /API/2.0/Data/Incidents/MetaInvestigationInterview/Default/{id}:
     post:
+      tags:
+        - Interviews
+      summary: Updates an existing Incident Investigation Interview.
+      operationId: updateIncidentInvestigationInterview
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to update.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The incident investigation issue information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Interview'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code: 
+                        type: string
+                        description: The HTTP status code
+                      message:
+                        type: string
+                        description: The constant value \"OK\" or an error message if HTTP Status code indicates a non-success status.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                example:
+                  status:
+                    code: 200
+                    message: OK
+                  id: 'Incidents/MetaInvestigationInterview/Default:207'
+
   /API/2.0/Data/Incidents/MetaInvestigationInterview/Default/{id}/Delete:
     post:
+      tags:
+        - Interviews
+      summary: Deletes an existing Incident Investigation Interview.
+      operationId: deleteIncidentInvestigationInterview
+      parameters:
+        - in: path
+          name: id
+          description: The id of the object to update.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The current session token obtained using the security API.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
 
 components:
   schemas:
     Incident:
-      type:
-        object
+      type: object
       properties:
+        id:
+          type: string
+          example: Incidents/MetaIncident/Default:102
         Actions:
           type: array
-          dscription: Array of Action Ids
+          description: Array of Action Ids
           items:
             $ref: '#/components/schemas/EntityId'
         Allegation:
@@ -127,13 +1681,13 @@ components:
         BusinessArea:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         CaseStatus:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Categories:
           type: array
           description: Array of CategoryIds
@@ -144,20 +1698,20 @@ components:
         CloseReason:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         CloseStatus:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Comments:
           type: string
         Company:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Contacts:
           type: array
           items:
@@ -205,8 +1759,8 @@ components:
         Product:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         RelatedIncidents:
           type: array
           description: Array of ids of the related Incidents.
@@ -227,8 +1781,8 @@ components:
         RespParty:
           type: object
           description: Reference to an Employee.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Source:
           type: string
         #Source System
@@ -243,11 +1797,14 @@ components:
         Type:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
     Action:
       type: object
       properties:
+        id:
+          type: string
+          example: Incidents/MetaIncidentAction/Default:103
         Attachments:
           type: array
           items:
@@ -255,15 +1812,15 @@ components:
         BusinessArea:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Comments:
           type: string
         Company:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         DateCreated:
           type: string
           format: date-time
@@ -272,21 +1829,25 @@ components:
         Employee:
           type: object
           description: Reference to an Employee.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Product:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Type:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
+            
     Amount:
       type: object
       properties:
+        id:
+          type: string
+          example: Incidents/MetaIncidentAmount/Default:103
         Amount:
           type: number
         Attachments:
@@ -296,15 +1857,15 @@ components:
         BusinessArea:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Comments:
           type: string
         Company:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         DateFrom:
           type: string
           format: date-time
@@ -316,18 +1877,18 @@ components:
         Employee:
           type: object
           description: Reference to an Employee.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Product:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Type:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
     Attachment:
       type: object
       properties:
@@ -339,14 +1900,17 @@ components:
           description: The name of the attachment.
         AttachedTo:
           type: object
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         FileContent:
           type: string
           description: The path to the file content field. This value can be passed to the Data service to download or upload file content.
     Contact:
       type: object
       properties:
+        id:
+          type: string
+          example: Incidents/MetaIncidentContact/Default:104
         Address1: 
           type: string
         Address2: 
@@ -362,8 +1926,8 @@ components:
         Company:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Email: 
           type: string
         Fax: 
@@ -383,11 +1947,14 @@ components:
     Interview:
       type: object
       properties:
+        id:
+          type: string
+          example: Incidents/MetaInvestigationInterview/Default:104
         CreatedBy:
           type: object
           description: Reference to an Employee.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         InterviewDate:
           type: string
           format: date-time
@@ -398,13 +1965,16 @@ components:
         Interviewer:
           type: object
           description: Reference to an Employee.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Notes:
           type: string
     Investigation:
       type: object
       properties:
+        id:
+          type: string
+          example: Incidents/MetaInvestigation/Default:104
         Interviews:
           type: array
           description: Reference to Interviews.
@@ -420,8 +1990,8 @@ components:
         RespParty:
           type: object
           description: Reference to an Employee.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         SecondaryInvestigators:
           type: array
           description: Reference to Employees.
@@ -430,37 +2000,46 @@ components:
     Issue:
       type: object
       properties:
+        id:
+          type: string
+          example: Incidents/MetaInvestigationIssue/Default:104
         IssueSubTopic:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         IssueTopic:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Outcome:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
     RelatedType:
       type: object
       properties:
+        id:
+          type: string
+          example: Incidents/MetaIncidentRelType/Default:104
         SubType:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Type:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
     Status:
       type: object
       properties:
+        id:
+          type: string
+          example: Incidents/MetaIncidentStatus/Default:104
         Attachments:
           type: array
           items:
@@ -468,15 +2047,15 @@ components:
         CaseStatus:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Comments:
           type: string
         ConfidentialityCode:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         DateCreated:
           type: string
           format: date-time
@@ -487,42 +2066,42 @@ components:
         Employee:
           type: object
           description: Reference to an Employee.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Mode:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         Note:
           type: string
         Reason:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         ResolutionCode:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         SecondaryCategory:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         SecondaryStatusCode:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         SentToHotlineVendor:
           type: boolean
         Significance:
           type: object
           description: Reference to lookup table value.
-          schema:
-            $ref: '#/components/schemas/EntityId'
+          allOf:
+            - $ref: '#/components/schemas/EntityId'
         SourceSystem:
           type: string
     EntityId:
@@ -536,4 +2115,3 @@ components:
           type: string
           description: Action value used when creating or updating a referenced value which tells the application to add or remove the relationship to the referenced component.
           enum: [ADD, REMOVE]
-          
